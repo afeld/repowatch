@@ -2,17 +2,17 @@ var fs = require('fs'),
   exec = require('child_process').exec,
   mongodb = require('mongodb');
 
-function getRepoList(){
-  return [
-    {
-      user: 'afeld',
-      name: 'backbone-nested'
-    },
-    {
-      user: 'dcneiner',
-      name: 'In-Field-Labels-jQuery-Plugin'
-    }
-  ];
+function getRepoList(user){
+  var repos = [];
+  user.repos.forEach(function(repo){
+    var match = repo.url.match(/^https:\/\/github.com\/([^\/]+)\/([^\/]+)/);
+    repos.push({
+      user: match[1],
+      name: match[2]
+    });
+  });
+
+  return repos;
 }
 
 function findMostRecent(repo, callback){
@@ -38,27 +38,28 @@ function findMostRecent(repo, callback){
 function run(dbClient){
   var usersColl = new mongodb.Collection(dbClient, 'users');
   usersColl.find().each(function(err, user){
+    if (!user) return; // sometimes it's null..?
     console.log('user', user);
-  });
 
-  var repos = getRepoList(usersColl);
-  repos.forEach(function(repo){
-    var ghRepo = repo.user + '/' + repo.name,
-      url = 'git://github.com/' + ghRepo + '.git';
+    var repos = getRepoList(user);
+    repos.forEach(function(repo){
+      var ghRepo = repo.user + '/' + repo.name,
+        url = 'git://github.com/' + ghRepo + '.git';
 
-    fs.mkdir('tmp', function(){
-      // clone and/or update repo
-      exec('cd tmp && git clone ' + url + ' && cd ' + repo.name + '.git && git pull', function(){
-        findMostRecent(repo, function(tagOrSha, version){
-          if (version){
-            console.log(ghRepo, version);
-          } else {
-            console.log('version not found for ' + ghRepo, tagOrSha);
-          }
-          dbClient.close();
+      fs.mkdir('tmp', function(){
+        // clone and/or update repo
+        exec('cd tmp && git clone ' + url + ' && cd ' + repo.name + '.git && git pull', function(){
+          findMostRecent(repo, function(tagOrSha, version){
+            if (version){
+              console.log(ghRepo, version);
+            } else {
+              console.log('version not found for ' + ghRepo, tagOrSha);
+            }
+            dbClient.close();
+          });
         });
       });
-    });
+    }); 
   });
 }
 
