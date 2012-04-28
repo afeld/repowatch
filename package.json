@@ -8,6 +8,7 @@
   },
   "main": "worker.js",
   "dependencies": {
+    "express": "2.5.x",
     "mongodb": "0.9.x"
   },
   "devDependencies": {},
