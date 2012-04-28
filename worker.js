@@ -1,5 +1,6 @@
 var fs = require('fs'),
-  exec = require('child_process').exec;
+  exec = require('child_process').exec,
+  mongodb = require('mongodb');
 
 function getRepoList(){
   return [
@@ -34,21 +35,43 @@ function findMostRecent(repo, callback){
   });
 }
 
-var repos = getRepoList();
-repos.forEach(function(repo){
-  var ghRepo = repo.user + '/' + repo.name,
-    url = 'git://github.com/' + ghRepo + '.git';
+function run(dbClient){
+  var usersColl = new mongodb.Collection(dbClient, 'users');
+  usersColl.find().each(function(err, user){
+    console.log('user', user);
+  });
 
-  fs.mkdir('tmp', function(){
-    // clone and/or update repo
-    exec('cd tmp && git clone ' + url + ' && cd ' + repo.name + '.git && git pull', function(){
-      findMostRecent(repo, function(tagOrSha, version){
-        if (version){
-          console.log(ghRepo, version);
-        } else {
-          console.log('version not found for ' + ghRepo, tagOrSha);
-        }
+  var repos = getRepoList(usersColl);
+  repos.forEach(function(repo){
+    var ghRepo = repo.user + '/' + repo.name,
+      url = 'git://github.com/' + ghRepo + '.git';
+
+    fs.mkdir('tmp', function(){
+      // clone and/or update repo
+      exec('cd tmp && git clone ' + url + ' && cd ' + repo.name + '.git && git pull', function(){
+        findMostRecent(repo, function(tagOrSha, version){
+          if (version){
+            console.log(ghRepo, version);
+          } else {
+            console.log('version not found for ' + ghRepo, tagOrSha);
+          }
+          dbClient.close();
+        });
       });
     });
   });
+}
+
+new mongodb.Db('repowatch', new mongodb.Server('ds033107.mongolab.com', 33107, {})).open(function(error, dbClient){
+  if (error){
+    console.error(error);
+  } else {
+    var dbPass = process.env.REPOWATCH_DB_PASS;
+    if (!dbPass) throw "REPOWATCH_DB_PASS password not set";
+    dbClient.authenticate('admin', dbPass, function(){
+      run(dbClient);
+    });
+  }
 });
+
+
