@@ -2,21 +2,9 @@ var fs = require('fs'),
   exec = require('child_process').exec,
   mongodb = require('mongodb');
 
-function getRepoList(user){
-  var repos = [];
-  user.repos.forEach(function(repo){
-    var match = repo.url.match(/^https:\/\/github.com\/([^\/]+)\/([^\/]+)/);
-    repos.push({
-      user: match[1],
-      name: match[2]
-    });
-  });
 
-  return repos;
-}
-
-function findMostRecent(repo, callback){
-  var execOpts = { cwd: 'tmp/' + repo.name };
+function findMostRecent(repoDir, callback){
+  var execOpts = { cwd: repoDir };
   // get most recent tag
   exec('git describe --abbrev=0 --tags', execOpts, function(error, stdout, stderr){
     // console.log(error, stdout, stderr);
@@ -41,15 +29,17 @@ function run(dbClient){
     if (!user) return; // sometimes it's null..?
     console.log('user', user);
 
-    var repos = getRepoList(user);
-    repos.forEach(function(repo){
-      var ghRepo = repo.user + '/' + repo.name,
+    user.repos.forEach(function(repo){
+      var repoMatch = repo.url.match(/^https:\/\/github.com\/([^\/]+)\/([^\/]+)/),
+        repoUser = repoMatch[1],
+        repoName = repoMatch[2],
+        ghRepo = repoUser + '/' + repoName,
         url = 'git://github.com/' + ghRepo + '.git';
 
       fs.mkdir('tmp', function(){
         // clone and/or update repo
-        exec('cd tmp && git clone ' + url + ' && cd ' + repo.name + '.git && git pull', function(){
-          findMostRecent(repo, function(tagOrSha, version){
+        exec('cd tmp && git clone ' + url + ' && cd ' + repoName + '.git && git pull', function(){
+          findMostRecent('tmp/' + repoName, function(tagOrSha, version){
             if (version){
               console.log(ghRepo, version);
             } else {
