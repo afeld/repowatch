@@ -5,21 +5,21 @@ var fs = require('fs'),
 
 function findMostRecent(repoDir, callback){
   var execOpts = { cwd: repoDir };
-  // get most recent tag
-  exec('git describe --abbrev=0 --tags', execOpts, function(error, stdout, stderr){
-    // console.log(error, stdout, stderr);
-    var tag = stdout.trim();
-    if (tag){
-      callback(tag, tag);
-    } else {
-      // get most recent commit
-      exec('git rev-parse HEAD', execOpts, function(error, stdout, stderr){
-        var sha = stdout.trim();
+
+  // get SHA of master
+  exec('git rev-parse HEAD', execOpts, function(error, stdout, stderr){
+    var masterSha = stdout.trim();
+    // get most recent tag
+    exec('git describe --abbrev=0 --tags', execOpts, function(error, stdout, stderr){
+      var tag = stdout.trim();
+      if (tag){
+        callback(masterSha, tag);
+      } else {
         // TODO find version number
         // grep -i -r 'version\b[^\n]\+(\d+)' *
-        callback(sha, undefined);
-      });
-    }
+        callback(masterSha, undefined);
+      }
+    });
   });
 }
 
@@ -39,11 +39,11 @@ function run(dbClient){
       fs.mkdir('tmp', function(){
         // clone and/or update repo
         exec('cd tmp && git clone ' + url + ' && cd ' + repoName + '.git && git pull', function(){
-          findMostRecent('tmp/' + repoName, function(tagOrSha, version){
+          findMostRecent('tmp/' + repoName, function(masterSha, version){
             if (version){
               console.log(ghRepo, version);
             } else {
-              console.log('version not found for ' + ghRepo, tagOrSha);
+              console.log('version not found for ' + ghRepo, masterSha);
             }
             dbClient.close();
           });
