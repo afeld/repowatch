@@ -1,0 +1,16 @@
+{
+  "author": "Aidan Feldman <aidan.feldman@gmail.com> (http://aidanfeldman.com)",
+  "name": "repowatch",
+  "description": "Monitors Git repos for changes.",
+  "version": "0.0.0",
+  "repository": {
+    "url": ""
+  },
+  "main": "worker.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  }
+}
