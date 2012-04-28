@@ -21,10 +21,15 @@ function findMostRecent(repo, callback){
     // console.log(error, stdout, stderr);
     var tag = stdout.trim();
     if (tag){
-      callback(tag);
+      callback(tag, tag);
     } else {
-      // TODO
-      callback();
+      // get most recent commit
+      exec('git rev-parse HEAD', execOpts, function(error, stdout, stderr){
+        var sha = stdout.trim();
+        // TODO find version number
+        // grep -i -r 'version\b[^\n]\+(\d+)' *
+        callback(sha, undefined);
+      });
     }
   });
 }
@@ -37,11 +42,11 @@ repos.forEach(function(repo){
   fs.mkdir('tmp', function(){
     // clone and/or update repo
     exec('cd tmp && git clone ' + url + ' && cd ' + repo.name + '.git && git pull', function(){
-      findMostRecent(repo, function(version){
+      findMostRecent(repo, function(tagOrSha, version){
         if (version){
           console.log(ghRepo, version);
         } else {
-          console.log('version not found for ' + ghRepo);
+          console.log('version not found for ' + ghRepo, tagOrSha);
         }
       });
     });
