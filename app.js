@@ -2,9 +2,10 @@ var express = require('express'),
   mongodb = require('mongodb');
 
 var app = express.createServer();
+app.set('view engine', 'ejs');
 
 app.get('/', function(req, res){
-  res.send('Hello World');
+  res.render('index.ejs');
 });
 
 
