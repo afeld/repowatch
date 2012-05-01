@@ -1,9 +1,6 @@
 var mongoose = require('mongoose'),
-  app = require('./config/environment');
-
-require('./models/user');
-var User = mongoose.model('User');
-
+  app = require('./config/environment'),
+  User = require('./models/user').model;
 
 app.get('/', function(req, res){
   res.render('index', {notice: null});
@@ -13,7 +10,7 @@ app.post('/submit', function(req, res){
   var userInfo = req.body.user,
     email = userInfo.email;
 
-  console.log(req.body);
+  // TODO do a find and update instead
   var doc = {
     '$set': {email: email},
     '$addToSet': {
