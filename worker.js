@@ -13,23 +13,18 @@ var mail = require('mail').Mail({
 });
 
 
-function cloneRepo(repoUrl, callback){
-  var repoMatch = repoUrl.match(/^https:\/\/github.com\/([^\/]+)\/([^\/]+)/),
-    repoUser = repoMatch[1],
-    repoName = repoMatch[2],
-    ghRepo = repoUser + '/' + repoName,
-    url = 'git://github.com/' + ghRepo + '.git';
+// clone and/or update repo
+function cloneRepo(repo, callback){
+  var repoName = repo.getName(),
+    clonePath = 'tmp/' + repo.getUser();
 
-  // clone and/or update repo
-  var clonePath = 'tmp/' + repoUser;
-  exec('mkdir -p ' + clonePath + ' && cd ' + clonePath + ' && git clone ' + url + ' && cd ' + repoName + ' && git pull', function(){
+  exec('mkdir -p ' + clonePath + ' && cd ' + clonePath + ' && git clone ' + repo.getCloneUrl() + ' && cd ' + repoName + ' && git pull', function(){
     callback(clonePath + '/' + repoName);
   });
 }
 
-
-function findMostRecent(repoUrl, callback){
-  cloneRepo(repoUrl, function(repoDir){
+function findMostRecent(repo, callback){
+  cloneRepo(repo, function(repoDir){
     var execOpts = { cwd: repoDir };
 
     // get SHA of master
@@ -50,29 +45,30 @@ function findMostRecent(repoUrl, callback){
   });
 }
 
+function notifyNewVersion(user, repo, version){
+  mail.message({
+    from: 'repowatcher@gmail.com',
+    to: [user.email],
+    subject: 'New version of ' + repo.getGhRepo() + ' - ' + version
+  })
+  .body("You're welcome!")
+  .send(function(err) {
+    if (err) throw err;
+    console.log('Sent!');
+  });
+}
+
+
 User.find().each(function(err, user){
   if (!user) return; // sometimes it's null..?
   console.log('user', user);
 
   user.repos.forEach(function(repo){
-    var repoUrl = repo.url,
-      ghRepo = repoUrl.match(/^https:\/\/github.com\/([^\/]+\/[^\/]+)/)[1];
-
-    findMostRecent(repoUrl, function(masterSha, version){
+    findMostRecent(repo, function(masterSha, version){
+      var ghRepo = repo.getGhRepo();
       if (version){
         console.log(ghRepo, version);
-
-        mail.message({
-          from: 'repowatcher@gmail.com',
-          to: [user.email],
-          subject: 'New version of ' + ghRepo + ' - ' + version
-        })
-        .body("You're welcome!")
-        .send(function(err) {
-          if (err) throw err;
-          console.log('Sent!');
-        });
-
+        notifyNewVersion(user, repo, version);
       } else {
         console.log('version not found for ' + ghRepo, masterSha);
       }
