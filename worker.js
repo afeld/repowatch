@@ -2,6 +2,14 @@ var fs = require('fs'),
   exec = require('child_process').exec,
   mongodb = require('mongodb');
 
+var mailPass = process.env.REPOWATCH_EMAIL_PASS;
+if (!mailPass) throw new Error('REPOWATCH_EMAIL_PASS must be set');
+var mail = require('mail').Mail({
+  host: 'smtp.gmail.com',
+  username: 'repowatcher@gmail.com',
+  password: mailPass
+});
+
 
 function findMostRecent(repoDir, callback){
   var execOpts = { cwd: repoDir };
@@ -42,10 +50,21 @@ function run(dbClient){
           findMostRecent('tmp/' + repoName, function(masterSha, version){
             if (version){
               console.log(ghRepo, version);
+
+              mail.message({
+                from: 'repowatcher@gmail.com',
+                to: [user.email],
+                subject: 'New version of ' + repoName + ' - ' + version
+              })
+              .body("You're welcome!")
+              .send(function(err) {
+                if (err) throw err;
+                console.log('Sent!');
+              });
+
             } else {
               console.log('version not found for ' + ghRepo, masterSha);
             }
-            dbClient.close();
           });
         });
       });

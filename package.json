@@ -2,7 +2,7 @@
   "author": "Aidan Feldman <aidan.feldman@gmail.com> (http://aidanfeldman.com)",
   "name": "repowatch",
   "description": "Monitors Git repos for changes.",
-  "version": "0.0.0",
+  "version": "0.0.0-1",
   "repository": {
     "url": ""
   },
@@ -10,6 +10,7 @@
   "dependencies": {
     "ejs": "0.7.x",
     "express": "2.5.x",
+    "mail": "0.2.x",
     "mongodb": "0.9.x"
   },
   "devDependencies": {},
