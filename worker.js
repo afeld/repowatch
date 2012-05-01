@@ -44,29 +44,28 @@ User.find().each(function(err, user){
       ghRepo = repoUser + '/' + repoName,
       url = 'git://github.com/' + ghRepo + '.git';
 
-    fs.mkdir('tmp', function(){
-      // clone and/or update repo
-      exec('cd tmp && git clone ' + url + ' && cd ' + repoName + '.git && git pull', function(){
-        findMostRecent('tmp/' + repoName, function(masterSha, version){
-          if (version){
-            console.log(ghRepo, version);
+    // clone and/or update repo
+    var clonePath = 'tmp/' + repoUser;
+    exec('mkdir -p ' + clonePath + ' && cd ' + clonePath + ' && git clone ' + url + ' && cd ' + repoName + ' && git pull', function(){
+      findMostRecent(clonePath + '/' + repoName, function(masterSha, version){
+        if (version){
+          console.log(ghRepo, version);
 
-            mail.message({
-              from: 'repowatcher@gmail.com',
-              to: [user.email],
-              subject: 'New version of ' + repoName + ' - ' + version
-            })
-            .body("You're welcome!")
-            .send(function(err) {
-              if (err) throw err;
-              console.log('Sent!');
-            });
+          mail.message({
+            from: 'repowatcher@gmail.com',
+            to: [user.email],
+            subject: 'New version of ' + repoName + ' - ' + version
+          })
+          .body("You're welcome!")
+          .send(function(err) {
+            if (err) throw err;
+            console.log('Sent!');
+          });
 
-          } else {
-            console.log('version not found for ' + ghRepo, masterSha);
-          }
-        });
+        } else {
+          console.log('version not found for ' + ghRepo, masterSha);
+        }
       });
     });
-  }); 
+  });
 });
