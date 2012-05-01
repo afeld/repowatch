@@ -1,6 +1,8 @@
 var fs = require('fs'),
-  exec = require('child_process').exec,
-  mongodb = require('mongodb');
+  exec = require('child_process').exec;
+
+require('./config/db');
+var User = require('./models/user').model;
 
 var mailPass = process.env.REPOWATCH_EMAIL_PASS;
 if (!mailPass) throw new Error('REPOWATCH_EMAIL_PASS must be set');
@@ -31,57 +33,40 @@ function findMostRecent(repoDir, callback){
   });
 }
 
-function run(dbClient){
-  var usersColl = new mongodb.Collection(dbClient, 'users');
-  usersColl.find().each(function(err, user){
-    if (!user) return; // sometimes it's null..?
-    console.log('user', user);
+User.find().each(function(err, user){
+  if (!user) return; // sometimes it's null..?
+  console.log('user', user);
 
-    user.repos.forEach(function(repo){
-      var repoMatch = repo.url.match(/^https:\/\/github.com\/([^\/]+)\/([^\/]+)/),
-        repoUser = repoMatch[1],
-        repoName = repoMatch[2],
-        ghRepo = repoUser + '/' + repoName,
-        url = 'git://github.com/' + ghRepo + '.git';
+  user.repos.forEach(function(repo){
+    var repoMatch = repo.url.match(/^https:\/\/github.com\/([^\/]+)\/([^\/]+)/),
+      repoUser = repoMatch[1],
+      repoName = repoMatch[2],
+      ghRepo = repoUser + '/' + repoName,
+      url = 'git://github.com/' + ghRepo + '.git';
 
-      fs.mkdir('tmp', function(){
-        // clone and/or update repo
-        exec('cd tmp && git clone ' + url + ' && cd ' + repoName + '.git && git pull', function(){
-          findMostRecent('tmp/' + repoName, function(masterSha, version){
-            if (version){
-              console.log(ghRepo, version);
+    fs.mkdir('tmp', function(){
+      // clone and/or update repo
+      exec('cd tmp && git clone ' + url + ' && cd ' + repoName + '.git && git pull', function(){
+        findMostRecent('tmp/' + repoName, function(masterSha, version){
+          if (version){
+            console.log(ghRepo, version);
 
-              mail.message({
-                from: 'repowatcher@gmail.com',
-                to: [user.email],
-                subject: 'New version of ' + repoName + ' - ' + version
-              })
-              .body("You're welcome!")
-              .send(function(err) {
-                if (err) throw err;
-                console.log('Sent!');
-              });
+            mail.message({
+              from: 'repowatcher@gmail.com',
+              to: [user.email],
+              subject: 'New version of ' + repoName + ' - ' + version
+            })
+            .body("You're welcome!")
+            .send(function(err) {
+              if (err) throw err;
+              console.log('Sent!');
+            });
 
-            } else {
-              console.log('version not found for ' + ghRepo, masterSha);
-            }
-          });
+          } else {
+            console.log('version not found for ' + ghRepo, masterSha);
+          }
         });
       });
-    }); 
-  });
-}
-
-new mongodb.Db('repowatch', new mongodb.Server('ds033107.mongolab.com', 33107, {})).open(function(error, dbClient){
-  if (error){
-    console.error(error);
-  } else {
-    var dbPass = process.env.REPOWATCH_DB_PASS;
-    if (!dbPass) throw "REPOWATCH_DB_PASS password not set";
-    dbClient.authenticate('admin', dbPass, function(){
-      run(dbClient);
     });
-  }
+  }); 
 });
-
-
