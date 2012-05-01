@@ -11,7 +11,6 @@
     "ejs": "0.7.x",
     "express": "2.5.x",
     "mail": "0.2.x",
-    "mongodb": "0.9.x",
     "mongoose": "2.6.x"
   },
   "devDependencies": {},
