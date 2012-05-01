@@ -13,22 +13,39 @@ var mail = require('mail').Mail({
 });
 
 
-function findMostRecent(repoDir, callback){
-  var execOpts = { cwd: repoDir };
+function cloneRepo(repoUrl, callback){
+  var repoMatch = repoUrl.match(/^https:\/\/github.com\/([^\/]+)\/([^\/]+)/),
+    repoUser = repoMatch[1],
+    repoName = repoMatch[2],
+    ghRepo = repoUser + '/' + repoName,
+    url = 'git://github.com/' + ghRepo + '.git';
 
-  // get SHA of master
-  exec('git rev-parse HEAD', execOpts, function(error, stdout, stderr){
-    var masterSha = stdout.trim();
-    // get most recent tag
-    exec('git describe --abbrev=0 --tags', execOpts, function(error, stdout, stderr){
-      var tag = stdout.trim();
-      if (tag){
-        callback(masterSha, tag);
-      } else {
-        // TODO find version number
-        // grep -i -r 'version\b[^\n]\+(\d+)' *
-        callback(masterSha, undefined);
-      }
+  // clone and/or update repo
+  var clonePath = 'tmp/' + repoUser;
+  exec('mkdir -p ' + clonePath + ' && cd ' + clonePath + ' && git clone ' + url + ' && cd ' + repoName + ' && git pull', function(){
+    callback(clonePath + '/' + repoName);
+  });
+}
+
+
+function findMostRecent(repoUrl, callback){
+  cloneRepo(repoUrl, function(repoDir){
+    var execOpts = { cwd: repoDir };
+
+    // get SHA of master
+    exec('git rev-parse HEAD', execOpts, function(error, stdout, stderr){
+      var masterSha = stdout.trim();
+      // get most recent tag
+      exec('git describe --abbrev=0 --tags', execOpts, function(error, stdout, stderr){
+        var tag = stdout.trim();
+        if (tag){
+          callback(masterSha, tag);
+        } else {
+          // TODO find version number
+          // grep -i -r 'version\b[^\n]\+(\d+)' *
+          callback(masterSha, undefined);
+        }
+      });
     });
   });
 }
@@ -38,34 +55,27 @@ User.find().each(function(err, user){
   console.log('user', user);
 
   user.repos.forEach(function(repo){
-    var repoMatch = repo.url.match(/^https:\/\/github.com\/([^\/]+)\/([^\/]+)/),
-      repoUser = repoMatch[1],
-      repoName = repoMatch[2],
-      ghRepo = repoUser + '/' + repoName,
-      url = 'git://github.com/' + ghRepo + '.git';
+    var repoUrl = repo.url,
+      ghRepo = repoUrl.match(/^https:\/\/github.com\/([^\/]+\/[^\/]+)/)[1];
 
-    // clone and/or update repo
-    var clonePath = 'tmp/' + repoUser;
-    exec('mkdir -p ' + clonePath + ' && cd ' + clonePath + ' && git clone ' + url + ' && cd ' + repoName + ' && git pull', function(){
-      findMostRecent(clonePath + '/' + repoName, function(masterSha, version){
-        if (version){
-          console.log(ghRepo, version);
+    findMostRecent(repoUrl, function(masterSha, version){
+      if (version){
+        console.log(ghRepo, version);
 
-          mail.message({
-            from: 'repowatcher@gmail.com',
-            to: [user.email],
-            subject: 'New version of ' + repoName + ' - ' + version
-          })
-          .body("You're welcome!")
-          .send(function(err) {
-            if (err) throw err;
-            console.log('Sent!');
-          });
+        mail.message({
+          from: 'repowatcher@gmail.com',
+          to: [user.email],
+          subject: 'New version of ' + ghRepo + ' - ' + version
+        })
+        .body("You're welcome!")
+        .send(function(err) {
+          if (err) throw err;
+          console.log('Sent!');
+        });
 
-        } else {
-          console.log('version not found for ' + ghRepo, masterSha);
-        }
-      });
+      } else {
+        console.log('version not found for ' + ghRepo, masterSha);
+      }
     });
   });
 });
