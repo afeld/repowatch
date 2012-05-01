@@ -43,8 +43,9 @@ dbClient.open(function(error){
     var dbPass = process.env.REPOWATCH_DB_PASS;
     if (!dbPass) throw "REPOWATCH_DB_PASS password not set";
     dbClient.authenticate('admin', dbPass, function(){
-      app.listen(3000);
-      console.log('app started on port 3000');
+      var port = (process.env.NODE_ENV === 'production') ? 80 : 3000;
+      app.listen(port);
+      console.log('app started on port ' + port);
     });
   }
 });
