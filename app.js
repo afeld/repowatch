@@ -1,13 +1,8 @@
-var express = require('express'),
+var app = require('./config/environment'),
   mongodb = require('mongodb');
 
+
 var dbClient;
-
-var app = express.createServer();
-app.use(express.logger());
-app.use(express.bodyParser());
-app.set('view engine', 'ejs');
-
 
 app.get('/', function(req, res){
   res.render('index', {notice: null});
