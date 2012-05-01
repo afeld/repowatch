@@ -15,6 +15,10 @@
   "devDependencies": {},
   "optionalDependencies": {},
   "engines": {
-    "node": "*"
+    "node": "0.6.x"
+  },
+  "subdomain": "repowatch",
+  "scripts": {
+    "start": "app.js"
   }
 }
