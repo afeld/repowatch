@@ -1,26 +1,28 @@
 var mongoose = require('mongoose');
 
 
+var GH_REGEX = /^https:\/\/github.com\/(([^\/]+)\/([^\/]+))\/?$/;
+
 var RepoSchema = new mongoose.Schema({
-  url: String
+  url: { type: String, validate: GH_REGEX }
 });
 
-var GH_REGEX = /^https:\/\/github.com\/(([^\/]+)\/([^\/]+))(?:\/|$)/;
+RepoSchema.methods = {
+  getGhRepo: function(){
+      return this.url.match(GH_REGEX)[1];
+  },
 
-RepoSchema.methods.getGhRepo = function(){
-  return this.url.match(GH_REGEX)[1];
-};
+  getUser: function(){
+    return this.url.match(GH_REGEX)[2];
+  },
 
-RepoSchema.methods.getUser = function(){
-  return this.url.match(GH_REGEX)[2];
-};
+  getName: function(){
+    return this.url.match(GH_REGEX)[3];
+  },
 
-RepoSchema.methods.getName = function(){
-  return this.url.match(GH_REGEX)[3];
-};
-
-RepoSchema.methods.getCloneUrl = function(){
-  return 'git://github.com/' + this.getGhRepo() + '.git';
+  getCloneUrl: function(){
+    return 'git://github.com/' + this.getGhRepo() + '.git';
+  }
 };
 
 
