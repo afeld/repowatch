@@ -7,7 +7,7 @@ require('../config/db');
 
 // Create a Test Suite
 vows.describe('User').addBatch({
-  'with a bad Github repo': {
+  'with an invalid Github URL': {
     topic: function () {
       return new User({
         repos: [
@@ -25,7 +25,7 @@ vows.describe('User').addBatch({
     }
   },
 
-  'with a real Github repo': {
+  'with a real Github URL': {
     topic: function () {
       return new User({
         repos: [
@@ -39,6 +39,26 @@ vows.describe('User').addBatch({
 
       'should not have any errors': function(err){
         assert.ok(!err, 'no error should have been thrown');
+      }
+    },
+
+    'the repo': {
+      topic: function(user){ return user.repos[0]; },
+
+      'should provide a .ghRepo': function(repo){
+        assert.equal(repo.ghRepo, 'afeld/backbone-nested');
+      },
+
+      'should provide a .user': function(repo){
+        assert.equal(repo.user, 'afeld');
+      },
+
+      'should provide a .name': function(repo){
+        assert.equal(repo.name, 'backbone-nested');
+      },
+
+      'should provide a .cloneUrl': function(repo){
+        assert.equal(repo.cloneUrl, 'git://github.com/afeld/backbone-nested.git');
       }
     }
   }

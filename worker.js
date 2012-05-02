@@ -15,10 +15,10 @@ var mail = require('mail').Mail({
 
 // clone and/or update repo
 function cloneRepo(repo, callback){
-  var repoName = repo.getName(),
-    clonePath = 'tmp/' + repo.getUser();
+  var repoName = repo.name,
+    clonePath = 'tmp/' + repo.user;
 
-  exec('mkdir -p ' + clonePath + ' && cd ' + clonePath + ' && git clone ' + repo.getCloneUrl() + ' && cd ' + repoName + ' && git pull', function(){
+  exec('mkdir -p ' + clonePath + ' && cd ' + clonePath + ' && git clone ' + repo.cloneUrl + ' && cd ' + repoName + ' && git pull', function(){
     callback(clonePath + '/' + repoName);
   });
 }
@@ -49,7 +49,7 @@ function notifyNewVersion(user, repo, version){
   mail.message({
     from: 'repowatcher@gmail.com',
     to: [user.email],
-    subject: 'New version of ' + repo.getGhRepo() + ' - ' + version
+    subject: 'New version of ' + repo.ghRepo + ' - ' + version
   })
   .body("You're welcome!")
   .send(function(err) {
@@ -65,7 +65,7 @@ User.find().each(function(err, user){
 
   user.repos.forEach(function(repo){
     findMostRecent(repo, function(masterSha, version){
-      var ghRepo = repo.getGhRepo();
+      var ghRepo = repo.ghRepo;
       if (version){
         console.log(ghRepo, version);
         notifyNewVersion(user, repo, version);

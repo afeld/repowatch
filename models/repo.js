@@ -7,23 +7,25 @@ var RepoSchema = new mongoose.Schema({
   url: { type: String, validate: GH_REGEX }
 });
 
-RepoSchema.methods = {
-  getGhRepo: function(){
-      return this.url.match(GH_REGEX)[1];
-  },
+RepoSchema.virtual('_urlMatch').get(function(){
+  return this.url.match(GH_REGEX);
+});
 
-  getUser: function(){
-    return this.url.match(GH_REGEX)[2];
-  },
+RepoSchema.virtual('ghRepo').get(function(){
+  return this._urlMatch[1];
+});
 
-  getName: function(){
-    return this.url.match(GH_REGEX)[3];
-  },
+RepoSchema.virtual('user').get(function(){
+  return this._urlMatch[2];
+});
 
-  getCloneUrl: function(){
-    return 'git://github.com/' + this.getGhRepo() + '.git';
-  }
-};
+RepoSchema.virtual('name').get(function(){
+  return this._urlMatch[3];
+});
+
+RepoSchema.virtual('cloneUrl').get(function(){
+  return 'git://github.com/' + this.ghRepo + '.git';
+});
 
 
 module.exports = {
