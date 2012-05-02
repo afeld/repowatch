@@ -6,6 +6,10 @@ app.get('/', function(req, res){
   res.render('index', {notice: null});
 });
 
+app.get('/submit', function(req, res){
+  res.redirect('/');
+});
+
 app.post('/submit', function(req, res){
   var userInfo = req.body.user,
     email = userInfo.email;
