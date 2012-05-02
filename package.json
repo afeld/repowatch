@@ -13,13 +13,16 @@
     "mail": "0.2.x",
     "mongoose": "2.6.x"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "vows": "0.6.x"
+  },
   "optionalDependencies": {},
   "engines": {
     "node": "0.6.x"
   },
   "subdomain": "repowatch",
   "scripts": {
-    "start": "app.js"
+    "start": "app.js",
+    "test": "NODE_ENV=test vows --spec"
   }
 }
