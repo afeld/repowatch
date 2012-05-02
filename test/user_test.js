@@ -7,6 +7,24 @@ require('../config/db');
 
 // Create a Test Suite
 vows.describe('User').addBatch({
+  'with a bad Github repo': {
+    topic: function () {
+      return new User({
+        repos: [
+          { url: 'gobbldy-gook' }
+        ]
+      });
+    },
+
+    'when saved': {
+      topic: function(user){ user.save(this.callback); },
+
+      'should give a validation error on the repo url': function(err){
+        assert.ok(err.errors.url, 'repos should have thrown a validation error');
+      }
+    }
+  },
+
   'with a real Github repo': {
     topic: function () {
       return new User({
@@ -20,9 +38,12 @@ vows.describe('User').addBatch({
       topic: function(user){ user.save(this.callback); },
 
       'should not have any errors': function(err){
-        assert.equal(err.errors, null);
+        assert.ok(!err, 'no error should have been thrown');
       }
     }
-    
   }
-}).export(module);
+}).export(module, {
+  // handing errors from mongoose is a pain without this flag... see
+  // https://github.com/cloudhead/vows/issues/24
+  error: false
+});
