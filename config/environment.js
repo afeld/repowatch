@@ -1,10 +1,49 @@
-var express = require('express');
+var express = require('express'),
+  everyauth = require('everyauth'),
+  User = require('../models/user').model;
+
 require('./db.js');
 
-var app = express.createServer();
 
-app.use(express.logger());
-app.use(express.bodyParser());
+var app = express.createServer(
+  express.logger(),
+  express.bodyParser(),
+  express.cookieParser(),
+  express.session({secret: process.env.REPOWATCH_DB_PASS || 'mr ripley'})
+);
+
+
+var ghAppId, ghAppSecret;
+app.configure('development', function(){
+  ghAppId = 'f0d9b692066a2a6ed109';
+  ghAppSecret = '3f1086df07f2121ce9c6c091e6b844ab48a6af53';
+});
+app.configure('production', function(){
+  ghAppId = 'c402a04a828a2844eec9';
+  ghAppSecret = process.env.REPOWATCH_GITHUB_SECRET;
+  if (!ghAppSecret) throw 'REPOWATCH_GITHUB_SECRET must be set';
+});
+
+everyauth.github
+  .appId(ghAppId)
+  .appSecret(ghAppSecret)
+  .findOrCreateUser(function(session, accessToken, accessTokenExtra, githubUserMetadata){
+    var promise = this.Promise();
+    User.createOrUpdateFromGh(accessToken, githubUserMetadata, function(err, user){
+      if (err) return promise.fail(err);
+      promise.fulfill(user);
+    });
+    return promise;
+  })
+  .redirectPath('/');
+
+app.use(everyauth.middleware());
+app.use(app.router);
+
+// add everyauth view helpers
+everyauth.helpExpress(app);
+
+
 app.set('view engine', 'ejs');
 
 module.exports = app;
