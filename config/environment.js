@@ -24,6 +24,11 @@ app.configure('production', function(){
   if (!ghAppSecret) throw 'REPOWATCH_GITHUB_SECRET must be set';
 });
 
+everyauth.everymodule.findUserById(function(userId, callback){
+  User.findById(userId, callback);
+  // callback has the signature, function (err, user) {...}
+});
+
 everyauth.github
   .appId(ghAppId)
   .appSecret(ghAppSecret)

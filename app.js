@@ -2,12 +2,16 @@ var mongoose = require('mongoose'),
   app = require('./config/environment'),
   User = require('./models/user').model;
 
+
 app.get('/', function(req, res){
+  if (req.user) return res.redirect('/settings'); // already signed in
   res.render('index');
 });
 
 app.get('/settings', function(req, res){
-  res.render('settings');
+  var user = req.user;
+  if (!user) return res.redirect('/'); // needs to be signed in
+  res.render('settings', { user: user });
 });
 
 
