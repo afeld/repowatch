@@ -1,5 +1,6 @@
 var mongoose = require('mongoose'),
   RepoSchema = require('./repo').schema,
+  request = require('request'),
   mailer = require('../config/mailer');
 
 
@@ -22,6 +23,14 @@ var UserSchema = new mongoose.Schema({
 var User;
 
 UserSchema.methods = {
+  updateWatchedRepos: function(callback){
+    request('https://api.github.com/user/watched?access_token=' + this.github.token, function(err, res, body){
+      var repoData = JSON.parse(body);
+      // TODO save to user
+      callback();
+    });
+  },
+
   notifyNewVersion: function(repo, version, callback){
     mailer.message({
       from: 'repowatcher@gmail.com',

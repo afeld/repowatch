@@ -12,7 +12,9 @@
     "everyauth": "0.2.x",
     "express": "2.5.x",
     "mail": "0.2.x",
-    "mongoose": "2.6.x"
+    "mongoose": "2.6.x",
+    "nock": "0.12.x",
+    "request": "2.9.x"
   },
   "devDependencies": {
     "vows": "0.6.x"

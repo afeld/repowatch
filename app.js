@@ -27,13 +27,14 @@ app.get('/settings', function(req, res){
 app.post('/unsubscribe', function(req, res){
   var user = req.user;
   if (!user) return res.redirect('/'); // needs to be signed in
+  
   user.remove(function(err){
     if (err){
       req.flash('error', err);
     } else {
       req.flash('info', 'You have been removed from the system');
     }
-    
+
     res.redirect('/logout');
   });
 });
