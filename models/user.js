@@ -5,8 +5,21 @@ var mongoose = require('mongoose'),
 
 var UserSchema = new mongoose.Schema({
   email: String,
+  gravatarId: String,
+  location: String,
+  name: String,
+  website: String,
+
+  github: {
+    id: Number,
+    login: String,
+    token: String
+  },
+  
   repos: [RepoSchema]
 });
+
+var User;
 
 UserSchema.methods = {
   notifyNewVersion: function(repo, version, callback){
@@ -28,10 +41,37 @@ UserSchema.methods = {
   }
 };
 
+UserSchema.statics = {
+  createOrUpdateFromGh: function(token, ghMetadata, callback){
+    var update = {
+      '$set': {
+        email: ghMetadata.email,
+        gravatarId: ghMetadata.gravatar_id,
+        location: ghMetadata.location,
+        name: ghMetadata.name,
+        website: ghMetadata.blog,
+        github: {
+          id: ghMetadata.id,
+          login: ghMetadata.login,
+          token: token
+        }
+      }
+    };
+
+    this.collection.findAndModify({'github.id': ghMetadata.id}, [], update, {'new': true, upsert: true}, function(err, doc){
+      if (err) return callback(err);
+
+      var user = new User(doc);
+      callback(null, user);
+    });
+  }
+};
+
 
 mongoose.model('User', UserSchema);
+User = mongoose.model('User');
 
 module.exports = {
   schema: UserSchema,
-  model: mongoose.model('User')
+  model: User
 };
