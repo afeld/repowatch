@@ -3,31 +3,11 @@ var mongoose = require('mongoose'),
   User = require('./models/user').model;
 
 app.get('/', function(req, res){
-  res.render('index', {notice: null});
+  res.render('index');
 });
 
-app.get('/submit', function(req, res){
-  res.redirect('/');
-});
-
-app.post('/submit', function(req, res){
-  var userInfo = req.body.user,
-    email = userInfo.email;
-
-  // TODO do a find and update instead
-  var doc = {
-    '$set': {email: email},
-    '$addToSet': {
-      repos: {
-        url: userInfo.repo
-      }
-    }
-  };
-
-  User.update({email: email}, doc, {upsert: true}, function(err, numAffected){
-    var notice = err || 'Submitted!';
-    res.render('index', {notice: notice});
-  });
+app.get('/settings', function(req, res){
+  res.render('settings');
 });
 
 

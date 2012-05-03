@@ -1,8 +1,6 @@
+<link rel="stylesheet" href="/auth-buttons.css">
 <p>
-  <%- notice %>
-  <form action="/submit" method="post">
-    <label type="text" for="user[email]">Email</label><input type="text" name="user[email]"/><br/>
-    <label type="text" for="user[repo]">Github project URL</label><input type="text" name="user[repo]"/><br/>
-    <input type="submit" value="Submit" />
-  </form>
+  <a class="btn-auth btn-github large" href="/auth/github">
+    Sign in with <b>Github</b>
+  </a>
 </p>

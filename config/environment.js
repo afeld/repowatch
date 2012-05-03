@@ -35,10 +35,11 @@ everyauth.github
     });
     return promise;
   })
-  .redirectPath('/');
+  .redirectPath('/settings');
 
 app.use(everyauth.middleware());
 app.use(app.router);
+app.use(express.static(__dirname + '/../public'));
 
 // add everyauth view helpers
 everyauth.helpExpress(app);
