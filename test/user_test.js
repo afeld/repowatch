@@ -17,6 +17,7 @@ vows.describe('User').addBatch({
 
     'when saved': {
       topic: function(user){ user.save(this.callback); },
+      teardown: function(nada, user){ user.remove(this.callback); },
 
       'should give a validation error on the repo url': function(err){
         assert.ok(err.errors.url, 'repos should have thrown a validation error');
@@ -35,6 +36,7 @@ vows.describe('User').addBatch({
 
     'when saved': {
       topic: function(user){ user.save(this.callback); },
+      teardown: function(nada, user){ user.remove(this.callback); },
 
       'should not have any errors': function(err){
         assert.ok(!err, 'no error should have been thrown');
