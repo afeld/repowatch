@@ -17,6 +17,12 @@
   <body>
     <h1>RepoWatch</h1>
     <h2>Get notified of new project versions on Github</h2>
+    <% for (var i = 0; i < flash.info.length; i++) { %>
+      <div class="flash-info"><%- flash.info[i] %></div>
+    <% } %>
+    <% for (var i = 0; i < flash.error.length; i++) { %>
+      <div class="flash-error"><%- flash.error[i] %></div>
+    <% } %>
     <%- body %>
   </body>
 </html>

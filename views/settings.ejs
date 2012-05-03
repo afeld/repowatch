@@ -1,3 +1,8 @@
 <p>
   Welcome <%= user.name %>!  You will get notifications in your email about repos you are watching.
 </p>
+<p>
+  <form action="/unsubscribe" method="post">
+    <input type="submit" value="Unsubscribe"/>
+  </form>
+</p>
