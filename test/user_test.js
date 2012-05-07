@@ -2,6 +2,7 @@ require('../config/db');
 var vows = require('vows'),
   assert = require('assert'),
   nock = require('nock'),
+  ObjectId = require('../node_modules/mongoose/node_modules/mongodb').ObjectID,
   User = require('../models/user');
 
 
@@ -63,6 +64,33 @@ vows.describe('User').addBatch({
       },
 
       "should have addded to the user's list of repos": function(err, nockedRequest, user){
+        assert.equal(user.repo_ids.length, 1);
+      }
+    }
+  },
+
+  'with an existing repo': {
+    topic: function(){
+      return new User({
+        repo_ids: [new ObjectId()]
+      });
+    },
+
+    '#updateWatchedRepos()': {
+      topic: function(user){
+        var nockedRequest = nock('https://api.github.com')
+          .filteringPath(/access_token=[^&]*/, 'access_token=XXX')
+          .get('/user/watched?access_token=XXX')
+          .reply(200, [SAMPLE_REPO_JSON]);
+
+        var callback = this.callback;
+        user.updateWatchedRepos(function(err){
+          callback(err, nockedRequest, user);
+        });
+      },
+
+      "should only have one repo ID": function(err, nockedRequest, user){
+        assert.equal(err, null);
         assert.equal(user.repo_ids.length, 1);
       }
     }

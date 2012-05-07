@@ -26,6 +26,9 @@ UserSchema.methods = {
   updateWatchedRepos: function(callback){
     var self = this;
     request('https://api.github.com/user/watched?access_token=' + this.github.token, function(err, res, body){
+      // clear existing list of watched repos
+      self.repo_ids = [];
+
       var reposData = JSON.parse(body);
       reposData.forEach(function(repoData){
         // find or create each repo
