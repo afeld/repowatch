@@ -89,6 +89,7 @@ vows.describe('User').addBatch({
       },
 
       "should only have one repo ID": function(err, nockedRequest, user){
+        console.log('callback');
         assert.equal(err, null);
         assert.equal(user.repo_ids.length, 1);
       }

@@ -2,7 +2,8 @@ require('../config/db');
 var mongoose = require('mongoose'),
   Repo = require('./repo'),
   request = require('request'),
-  mailer = require('../config/mailer');
+  mailer = require('../config/mailer'),
+  async = require('async');
 
 
 var UserSchema = new mongoose.Schema({
@@ -31,7 +32,7 @@ UserSchema.methods = {
       self.repo_ids = [];
 
       var reposData = JSON.parse(body);
-      reposData.forEach(function(repoData){
+      async.forEach(reposData, function(repoData, forEachCb){
         // find or create each repo
         var doc = { url: repoData.html_url };
         Repo.findOne(doc, function(err, repo){
@@ -47,13 +48,15 @@ UserSchema.methods = {
               // newly watched repo
               self.repo_ids.push(repoId);
               self.save(function(err){
-                callback(err);
+                forEachCb(err);
               });
             } else {
-              callback();
+              forEachCb();
             }
           });
         });
+      }, function(err){
+        callback(err);
       });
     });
   },

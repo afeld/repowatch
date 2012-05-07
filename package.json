@@ -8,6 +8,7 @@
   },
   "main": "worker.js",
   "dependencies": {
+    "async": "0.1.x",
     "ejs": "0.7.x",
     "everyauth": "0.2.x",
     "express": "2.5.x",
