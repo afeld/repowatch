@@ -35,6 +35,11 @@ everyauth.github
     User.createOrUpdateFromGh(accessToken, githubUserMetadata, function(err, user){
       if (err) return promise.fail(err);
       promise.fulfill(user);
+
+      // kick off updating their repos in the background
+      user.updateWatchedRepos(function(){
+        console.log('updating repos for ' + user._id + ' complete');
+      });
     });
     return promise;
   })
