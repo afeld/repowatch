@@ -57,6 +57,7 @@ RepoSchema.methods = {
     });
   },
 
+  // saves the repo
   updateVersion: function(callback){
     var self = this;
     this.findLatestVersion(function(err, version){

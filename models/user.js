@@ -31,32 +31,31 @@ UserSchema.methods = {
       // clear existing list of watched repos
       self.repo_ids = [];
 
+      // find or create each repo
       var reposData = JSON.parse(body);
       async.forEach(reposData, function(repoData, forEachCb){
-        // find or create each repo
         var doc = { url: repoData.html_url };
-        Repo.findOne(doc, function(err, repo){
-          if (!repo){
-            repo = new Repo(doc);
-            // will be saved be updateVersion()
-          }
 
-          // update the version before adding it to the user
-          repo.updateVersion(function(err){
-            var repoId = repo._id;
-            if (self.repo_ids.indexOf(repoId) < 0) {
-              // newly watched repo
-              self.repo_ids.push(repoId);
-              self.save(function(err){
-                forEachCb(err);
-              });
-            } else {
-              forEachCb();
-            }
-          });
+        async.waterfall([
+          function(seriesCb){
+            Repo.findOne(doc, seriesCb);
+          },
+          function(repo, seriesCb){
+            repo = repo || new Repo(doc);
+            // will be saved be updateVersion()
+
+            // update the version before adding it to the user
+            repo.updateVersion(function(err){
+              self.repo_ids.push(repo._id);
+              seriesCb(err);
+            });
+          }
+        ], function(err){
+          forEachCb(err);
         });
+
       }, function(err){
-        callback(err);
+        self.save(callback);
       });
     });
   },
