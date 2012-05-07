@@ -1,5 +1,6 @@
 require('../config/db');
 var mongoose = require('mongoose'),
+  path = require('path'),
   exec = require('child_process').exec;
 
 
@@ -33,16 +34,21 @@ RepoSchema.virtual('cloneUrl').get(function(){
 RepoSchema.methods = {
   // clone and/or update repo
   clone: function(callback){
-    var repoName = this.name,
-      clonePath = 'tmp/' + this.user;
-
-    exec('mkdir -p ' + clonePath + ' && cd ' + clonePath + ' && git clone ' + this.cloneUrl + ' && cd ' + repoName + ' && git pull', function(){
-      callback(clonePath + '/' + repoName);
-    });
+    var repoPath = 'tmp/' + this.user + '/' + this.name;
+    if (path.existsSync(repoPath)){
+      exec('git pull', { cwd: repoPath }, function(err){
+        callback(err, repoPath);
+      });
+    } else {
+      // creates parent directories if needed
+      exec('git clone ' + this.cloneUrl + ' ' + repoPath, function(err){
+        callback(err, repoPath);
+      });
+    }
   },
 
   findLatestVersion: function(callback){
-    this.clone(function(repoDir){
+    this.clone(function(err, repoDir){
       // get most recent tag
       exec('git describe --abbrev=0 --tags', { cwd: repoDir }, function(error, stdout, stderr){
         var tag = stdout.trim();
