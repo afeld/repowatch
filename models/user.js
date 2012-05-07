@@ -1,3 +1,4 @@
+require('../config/db');
 var mongoose = require('mongoose'),
   Repo = require('./repo'),
   request = require('request'),

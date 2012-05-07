@@ -2,8 +2,6 @@ var express = require('express'),
   everyauth = require('everyauth'),
   User = require('../models/user');
 
-require('./db.js');
-
 
 var app = express.createServer(
   express.logger(),

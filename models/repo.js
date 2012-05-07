@@ -1,3 +1,4 @@
+require('../config/db');
 var mongoose = require('mongoose'),
   exec = require('child_process').exec;
 

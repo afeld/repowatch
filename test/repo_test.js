@@ -1,4 +1,3 @@
-require('../config/db');
 var vows = require('vows'),
   assert = require('assert'),
   Repo = require('../models/repo');
