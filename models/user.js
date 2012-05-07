@@ -17,17 +17,40 @@ var UserSchema = new mongoose.Schema({
     token: String
   },
   
-  repos: [mongoose.Schema.ObjectId]
+  repo_ids: [mongoose.Schema.ObjectId]
 });
 
 var User;
 
 UserSchema.methods = {
   updateWatchedRepos: function(callback){
+    var self = this;
     request('https://api.github.com/user/watched?access_token=' + this.github.token, function(err, res, body){
-      var repoData = JSON.parse(body);
-      // TODO save to user
-      callback();
+      var reposData = JSON.parse(body);
+      reposData.forEach(function(repoData){
+        // find or create each repo
+        var doc = { url: repoData.html_url };
+        Repo.findOne(doc, function(err, repo){
+          if (!repo){
+            repo = new Repo(doc);
+            // will be saved be updateVersion()
+          }
+
+          // update the version before adding it to the user
+          repo.updateVersion(function(err){
+            var repoId = repo._id;
+            if (self.repo_ids.indexOf(repoId) < 0) {
+              // newly watched repo
+              self.repo_ids.push(repoId);
+              self.save(function(err){
+                callback(err);
+              });
+            } else {
+              callback();
+            }
+          });
+        });
+      });
     });
   },
 

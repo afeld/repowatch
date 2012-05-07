@@ -54,12 +54,16 @@ vows.describe('User').addBatch({
 
         var callback = this.callback;
         user.updateWatchedRepos(function(err){
-          callback(err, nockedRequest);
+          callback(err, nockedRequest, user);
         });
       },
 
       'should have made a request to Github': function(err, nockedRequest){
         nockedRequest.done();
+      },
+
+      "should have addded to the user's list of repos": function(err, nockedRequest, user){
+        assert.equal(user.repo_ids.length, 1);
       }
     }
   },

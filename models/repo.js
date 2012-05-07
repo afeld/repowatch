@@ -5,7 +5,8 @@ var mongoose = require('mongoose'),
 var GH_REGEX = /^https:\/\/github.com\/(([^\/]+)\/([^\/]+))\/?$/;
 
 var RepoSchema = new mongoose.Schema({
-  url: { type: String, validate: GH_REGEX }
+  url: { type: String, validate: GH_REGEX },
+  version: String
 });
 
 RepoSchema.virtual('_urlMatch').get(function(){
@@ -41,22 +42,26 @@ RepoSchema.methods = {
 
   findLatestVersion: function(callback){
     this.clone(function(repoDir){
-      var execOpts = { cwd: repoDir };
+      // get most recent tag
+      exec('git describe --abbrev=0 --tags', { cwd: repoDir }, function(error, stdout, stderr){
+        var tag = stdout.trim();
+        if (tag){
+          callback(null, tag);
+        } else {
+          // TODO find version number
+          // grep -i -r 'version\b[^\n]\+(\d+)' *
+          callback('no version found', undefined);
+        }
+      });
+    });
+  },
 
-      // get SHA of master
-      exec('git rev-parse HEAD', execOpts, function(error, stdout, stderr){
-        var masterSha = stdout.trim();
-        // get most recent tag
-        exec('git describe --abbrev=0 --tags', execOpts, function(error, stdout, stderr){
-          var tag = stdout.trim();
-          if (tag){
-            callback(masterSha, tag);
-          } else {
-            // TODO find version number
-            // grep -i -r 'version\b[^\n]\+(\d+)' *
-            callback(masterSha, undefined);
-          }
-        });
+  updateVersion: function(callback){
+    var self = this;
+    this.findLatestVersion(function(err, version){
+      self.version = version;
+      self.save(function(err){
+        callback(err);
       });
     });
   }

@@ -7,13 +7,13 @@ User.find().each(function(err, user){
   console.log('user', user);
 
   user.repos.forEach(function(repo){
-    repo.findLatestVersion(function(masterSha, version){
+    repo.findLatestVersion(function(err, version){
       var ghRepo = repo.ghRepo;
       if (version){
         console.log(ghRepo, version);
         user.notifyNewVersion(repo, version);
       } else {
-        console.log('version not found for ' + ghRepo, masterSha);
+        console.log('version not found for ' + ghRepo);
       }
     });
   });
