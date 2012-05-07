@@ -27,37 +27,41 @@ var User;
 UserSchema.methods = {
   updateWatchedRepos: function(callback){
     var self = this;
-    request('https://api.github.com/user/watched?access_token=' + this.github.token, function(err, res, body){
-      // clear existing list of watched repos
-      self.repo_ids = [];
+    async.waterfall([
+      function(outerCb){
+        // fetch list of watched repos
+        request('https://api.github.com/user/watched?access_token=' + self.github.token, outerCb);
+      },
+      function(res, body, outerCb){
+        // clear existing list of watched repos
+        self.repo_ids = [];
 
-      // find or create each repo
-      var reposData = JSON.parse(body);
-      async.forEach(reposData, function(repoData, forEachCb){
-        var doc = { url: repoData.html_url };
-
-        async.waterfall([
-          function(seriesCb){
-            Repo.findOne(doc, seriesCb);
-          },
-          function(repo, seriesCb){
-            repo = repo || new Repo(doc);
-            // will be saved be updateVersion()
-
-            // update the version before adding it to the user
-            repo.updateVersion(function(err){
+        // find or create each repo
+        var reposData = JSON.parse(body);
+        async.forEach(reposData, function(repoData, forEachCb){
+          // find/create the repo and update its version number
+          var doc = { url: repoData.html_url };
+          async.waterfall([
+            function(seriesCb){
+              Repo.findOne(doc, seriesCb);
+            },
+            function(repo, seriesCb){
+              repo = repo || new Repo(doc);
               self.repo_ids.push(repo._id);
-              seriesCb(err);
-            });
-          }
-        ], function(err){
-          forEachCb(err);
-        });
+              // will be saved by updateVersion()
 
-      }, function(err){
-        self.save(callback);
-      });
-    });
+              // update the version *before* saving the user, so they don't accidentally
+              // get emailed about it immediately
+              repo.updateVersion(seriesCb);
+            }
+          ], forEachCb);
+
+        }, outerCb);
+      },
+      function(outerCb){
+        self.save(outerCb);
+      }
+    ], callback);
   },
 
   notifyNewVersion: function(repo, version, callback){
