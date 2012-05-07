@@ -63,7 +63,6 @@ RepoSchema.methods = {
 };
 
 
-module.exports = {
-  schema: RepoSchema
-  // not used as a model directly
-};
+mongoose.model('Repo', RepoSchema);
+
+module.exports = mongoose.model('Repo');

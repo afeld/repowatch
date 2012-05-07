@@ -1,6 +1,6 @@
 var express = require('express'),
   everyauth = require('everyauth'),
-  User = require('../models/user').model;
+  User = require('../models/user');
 
 require('./db.js');
 

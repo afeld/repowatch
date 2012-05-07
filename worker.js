@@ -1,5 +1,5 @@
 require('./config/db');
-var User = require('./models/user').model;
+var User = require('./models/user');
 
 
 User.find().each(function(err, user){

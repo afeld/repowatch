@@ -1,6 +1,6 @@
 var mongoose = require('mongoose'),
   app = require('./config/environment'),
-  User = require('./models/user').model;
+  User = require('./models/user');
 
 
 app.dynamicHelpers({

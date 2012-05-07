@@ -1,5 +1,5 @@
 var mongoose = require('mongoose'),
-  RepoSchema = require('./repo').schema,
+  Repo = require('./repo'),
   request = require('request'),
   mailer = require('../config/mailer');
 
@@ -17,7 +17,7 @@ var UserSchema = new mongoose.Schema({
     token: String
   },
   
-  repos: [RepoSchema]
+  repos: [mongoose.Schema.ObjectId]
 });
 
 var User;
@@ -80,7 +80,4 @@ UserSchema.statics = {
 mongoose.model('User', UserSchema);
 User = mongoose.model('User');
 
-module.exports = {
-  schema: UserSchema,
-  model: User
-};
+module.exports = User;
